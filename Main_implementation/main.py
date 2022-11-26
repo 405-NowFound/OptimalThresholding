@@ -100,7 +100,7 @@ class Binarization:
             print(combination)
 
 def main():
-    inputFile = '/workspaces/OptimalThresholding/Main implementation/tests/global.CSV'
+    inputFile = 'tests/global.CSV'
     binarization = Binarization()
     binarization.findSolutions(inputFile)
   
