@@ -3,6 +3,8 @@ import operator
 from itertools import combinations, permutations
 import math
 import os
+from datetime import datetime
+import json
 
 class csvParser:
     """
@@ -72,7 +74,13 @@ class Binarization:
                 for e3 in comb3:
                     for e4 in comb4:
                         order = e1 + e2 + e3 + e4
-                        allCombinations.append(order)
+                        nrPlus = order.count("+")
+                        nrMinus = order.count("-")
+                        nrDiv = order.count("/")
+                        nrMul = order.count("*")
+
+                        if abs(nrPlus - nrMinus) <= 0 and abs(nrMul - nrDiv) <= 0:
+                            allCombinations.append(order)
         return allCombinations
 
     def printCombinations(self):
@@ -98,68 +106,46 @@ class Binarization:
 
         for order in self.allCombinations:
             if self.computeResult(order) is True:
-                if order in self.combFreq.keys():
-                    self.combFreq[order] += 1
+                if "".join(order) in self.combFreq.keys():
+                    self.combFreq["".join(order)] += 1
                 else:
-                    self.combFreq[order] = 1
+                    self.combFreq["".join(order)] = 1
 
 def main():
 
     binarization = Binarization()
-    inputPath = os.getcwd() + '/tests/global/test'
+    inputPath = os.getcwd() + '/tests/global/train'
     dir_list = os.listdir(inputPath)
 
     binarization.allCombinations = binarization.generateCombinationsList()
+    print(len(binarization.allCombinations))
 
-    index = 20
+    # index = 500
+    now = datetime.now()
+
+    current_time = now.strftime("%H:%M:%S")
+    print("Current Time =", current_time)
+
     for inFile in dir_list:
-        print(inFile)
-        print(index)
+        print(inFile + "...")
         inputFilePath = inputPath + '/' + str(inFile)
         binarization.findSolutionForOneFile(inputFilePath)
-        index -= 1
+    
+    now = datetime.now()
 
-        if index == 0:
-            break
-
+    current_time = now.strftime("%H:%M:%S")
+    print("Current Time =", current_time)
     print(max(binarization.combFreq.values()))
-  
+
+    jsonObj = json.dumps(binarization.combFreq, indent=4)
+
+    with open("sample.json", "w") as outfile:
+        outfile.write(jsonObj)
+
 if __name__ == "__main__":
     main()
 
     """
     TODO:
-    - class for all input files for global
     - take the same idea for local
-    - how to take as input all files from a folder
-    https://stackoverflow.com/questions/18262293/how-to-open-every-file-in-a-folder
     """
-
-
-    # def computeResult(self, order, result):
-    #     goodCombForCurrentStep = []
-    #     for i in range(1, len(self.valuesTh)):
-    #         result = self.parser.operationMap[order[i - 1]](result, float(self.valuesTh[i]))
-    #      if result <= 1 and result > 0:
-    #             index = math.floor(result * 255)
-    #             if float(self.parser.fMeasures[index]) > 80:
-    #                 goodCombForCurrentStep = order
-
-    #     print(goodCombForCurrentStep)
-    #     return goodCombForCurrentStep
-
-    # def findSolutions(self, inputFile):
-    #     self.parser.readCSV(inputFile)
-    #     self.idealTh = self.parser.tresholdings[0]
-    #     self.valuesTh = self.parser.tresholdings[1:15]
-    #     result = 0      
-                        # result = float(self.valuesTh[0])
-                        # self.goodCombinations = self.computeResult(order, result)
-        # else:
-        #     for order in self.goodCombinations:
-        #         result = float(self.valuesTh[0])
-        #         good = self.computeResult(order, result)
-        #         # print(self.goodCombinations)
-
-        # print(len(set(allCombinations)))
-        # self.printCombinations()
