@@ -52,7 +52,7 @@ class Binarization:
         self.parser = csvParser() # .csv file parser
         self.idealTh = 0 # the value of the ideal treshold
         self.valuesTh = [] # values of all tresholds
-        self.combFreq = dict() # list of combinations of operators which are more than 99.99%
+        self.combFreq = dict() # dict of all comb (train)
         self.allCombinations = []
 
     def generateCombinations(self):
@@ -97,7 +97,7 @@ class Binarization:
             if float(self.parser.fMeasures[index]) > 80:
                 return True
             else:
-                return False 
+                return False
 
     def findSolutionForOneFile(self, inputFile):
         self.parser.readCSV(inputFile)
@@ -111,36 +111,131 @@ class Binarization:
                 else:
                     self.combFreq["".join(order)] = 1
 
+class GlobalSolver:
+
+    def __init__(self):
+        self.binarization = Binarization()
+        self.trainFilteredResults = dict() # filtered after train
+        self.validationResults = dict() # after validation
+        
+        self.validationFilteredResults = dict() # filtered after validation
+        self.testResult = dict() #after test
+
+    def globalTrain(self):
+
+        inputPath = os.getcwd() + '/tests/global/test'
+        dir_list = os.listdir(inputPath)
+
+        self.binarization.allCombinations = self.binarization.generateCombinationsList()
+        print(len(self.binarization.allCombinations))
+
+        # # index = 500
+        # now = datetime.now()
+
+        # current_time = now.strftime("%H:%M:%S")
+        # print("Current Time =", current_time)
+
+        idx = 20
+        for inFile in dir_list:
+            print(inFile + "...")
+            inputFilePath = inputPath + '/' + str(inFile)
+            self.binarization.findSolutionForOneFile(inputFilePath)
+            # idx -= 1
+            # if idx == 0:
+            #     break
+
+        # current_time = now.strftime("%H:%M:%S")
+        # print("Current Time =", current_time)
+        # now = datetime.now()
+
+        jsonObj = json.dumps(self.binarization.combFreq, indent=4)
+        with open("trainResults.json", "w") as outfile:
+            outfile.write(jsonObj)
+
+        maximumValue = max(self.binarization.combFreq.values())
+        for key, value in self.binarization.combFreq.items():
+            if value >= maximumValue / 2:
+                self.trainFilteredResults[key] = value
+
+        jsonObj = json.dumps(self.trainFilteredResults, indent=4)
+        with open("filteredTrainResult.json", "w") as outfile:
+            outfile.write(jsonObj)
+
+    def globalValidation(self):
+        inputPath = os.getcwd() + '/tests/global/validation'
+        dir_list = os.listdir(inputPath)
+
+        for inFile in dir_list:
+            print(inFile + "...")
+            inputFilePath = inputPath + '/' + str(inFile)
+            self.binarization.parser.readCSV(inputFilePath)
+            self.binarization.idealTh = self.binarization.parser.tresholdings[0]
+            self.binarization.valuesTh = self.binarization.parser.tresholdings[1:15]
+
+            for key, _ in self.trainFilteredResults.items():
+                operations = list(key)
+                if self.binarization.computeResult(operations) == True:
+                    if "".join(operations) in self.validationResults.keys():
+                        self.validationResults["".join(operations)] += 1
+                    else:
+                        self.validationResults["".join(operations)] = 1
+
+        jsonObj = json.dumps(self.validationResults, indent=4)
+        with open("validationResults.json", "w") as outfile:
+            outfile.write(jsonObj)
+
+        maximumValue = max(self.validationResults.values())
+        for key, value in self.validationResults.items():
+            if value >= maximumValue * 0.75:
+                self.validationFilteredResults[key] = value
+
+        jsonObj = json.dumps(self.validationFilteredResults, indent=4)
+        with open("filteredValidationResults.json", "w") as outfile:
+            outfile.write(jsonObj)
+
+
+    def globalTest(self):
+        inputPath = os.getcwd() + '/tests/global/validation'
+        dir_list = os.listdir(inputPath)
+
+        for inFile in dir_list:
+            print(inFile + "...")
+            inputFilePath = inputPath + '/' + str(inFile)
+            self.binarization.parser.readCSV(inputFilePath)
+            self.binarization.idealTh = self.binarization.parser.tresholdings[0]
+            self.binarization.valuesTh = self.binarization.parser.tresholdings[1:15]
+
+            for key, _ in self.trainFilteredResults.items():
+                operations = list(key)
+                if self.binarization.computeResult(operations) == True:
+                    if "".join(operations) in self.validationResults.keys():
+                        self.validationResults["".join(operations)] += 1
+                    else:
+                        self.validationResults["".join(operations)] = 1
+
+        jsonObj = json.dumps(self.validationResults, indent=4)
+        with open("validationResults.json", "w") as outfile:
+            outfile.write(jsonObj)
+
+        maximumValue = max(self.validationResults.values())
+        for key, value in self.validationResults.items():
+            if value >= maximumValue * 0.75:
+                self.validationFilteredResults[key] = value
+
+        jsonObj = json.dumps(self.validationFilteredResults, indent=4)
+        with open("filteredValidationResults.json", "w") as outfile:
+            outfile.write(jsonObj)
+
+
+
+    def globalAll(self):
+        self.globalTrain()
+        self.globalValidation()
+
 def main():
 
-    binarization = Binarization()
-    inputPath = os.getcwd() + '/tests/global/train'
-    dir_list = os.listdir(inputPath)
-
-    binarization.allCombinations = binarization.generateCombinationsList()
-    print(len(binarization.allCombinations))
-
-    # index = 500
-    now = datetime.now()
-
-    current_time = now.strftime("%H:%M:%S")
-    print("Current Time =", current_time)
-
-    for inFile in dir_list:
-        print(inFile + "...")
-        inputFilePath = inputPath + '/' + str(inFile)
-        binarization.findSolutionForOneFile(inputFilePath)
-    
-    now = datetime.now()
-
-    current_time = now.strftime("%H:%M:%S")
-    print("Current Time =", current_time)
-    print(max(binarization.combFreq.values()))
-
-    jsonObj = json.dumps(binarization.combFreq, indent=4)
-
-    with open("sample.json", "w") as outfile:
-        outfile.write(jsonObj)
+    GS = GlobalSolver()
+    GS.globalAll()
 
 if __name__ == "__main__":
     main()
@@ -149,3 +244,5 @@ if __name__ == "__main__":
     TODO:
     - take the same idea for local
     """
+
+# self.binarization.combFreq = dict(sorted(self.binarization.combFreq.items(), key=lambda item: item[1]))
