@@ -119,11 +119,13 @@ class GlobalSolver:
         self.validationResults = dict() # after validation
         
         self.validationFilteredResults = dict() # filtered after validation
-        self.testResult = dict() #after test
+        self.testResults = dict() #after test
+
+        self.bestCombinationsTested = dict()
 
     def globalTrain(self):
 
-        inputPath = os.getcwd() + '/tests/global/test'
+        inputPath = os.getcwd() + '/tests/global/train'
         dir_list = os.listdir(inputPath)
 
         self.binarization.allCombinations = self.binarization.generateCombinationsList()
@@ -195,7 +197,7 @@ class GlobalSolver:
 
 
     def globalTest(self):
-        inputPath = os.getcwd() + '/tests/global/validation'
+        inputPath = os.getcwd() + '/tests/global/test'
         dir_list = os.listdir(inputPath)
 
         for inFile in dir_list:
@@ -205,32 +207,31 @@ class GlobalSolver:
             self.binarization.idealTh = self.binarization.parser.tresholdings[0]
             self.binarization.valuesTh = self.binarization.parser.tresholdings[1:15]
 
-            for key, _ in self.trainFilteredResults.items():
+            for key, _ in self.validationFilteredResults.items():
                 operations = list(key)
                 if self.binarization.computeResult(operations) == True:
-                    if "".join(operations) in self.validationResults.keys():
-                        self.validationResults["".join(operations)] += 1
+                    if "".join(operations) in self.testResults.keys():
+                        self.testResults["".join(operations)] += 1
                     else:
-                        self.validationResults["".join(operations)] = 1
+                        self.testResults["".join(operations)] = 1
 
-        jsonObj = json.dumps(self.validationResults, indent=4)
-        with open("validationResults.json", "w") as outfile:
+        jsonObj = json.dumps(self.testResults, indent=4)
+        with open("testResults.json", "w") as outfile:
             outfile.write(jsonObj)
 
-        maximumValue = max(self.validationResults.values())
-        for key, value in self.validationResults.items():
-            if value >= maximumValue * 0.75:
-                self.validationFilteredResults[key] = value
+        maximumValue = max(self.testResults.values())
+        for key, value in self.testResults.items():
+            if value >= maximumValue * 0.9:
+                self.bestCombinationsTested[key] = value
 
-        jsonObj = json.dumps(self.validationFilteredResults, indent=4)
-        with open("filteredValidationResults.json", "w") as outfile:
+        jsonObj = json.dumps(self.bestCombinationsTested, indent=4)
+        with open("bestResults.json", "w") as outfile:
             outfile.write(jsonObj)
-
-
 
     def globalAll(self):
         self.globalTrain()
         self.globalValidation()
+        self.globalTest()
 
 def main():
 
