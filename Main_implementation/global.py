@@ -5,6 +5,7 @@ import math
 import os
 from datetime import datetime
 import json
+import time
 
 class csvParser:
     """
@@ -234,7 +235,6 @@ class GlobalSolver:
         self.globalTest()
 
 def main():
-
     GS = GlobalSolver()
     GS.globalAll()
 
