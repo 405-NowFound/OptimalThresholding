@@ -6,6 +6,7 @@ import os
 from datetime import datetime
 import json
 import time
+from copy import deepcopy
 
 class csvParser:
     """
@@ -81,12 +82,14 @@ class Binarization:
 
         return allCombinations
 
-    def findSolutionForOneFile(self, inputFile):
+    def findSolutionForOneFile(self, inputFile, copyAllCombinations, limit):
         self.parser.readCSV(inputFile)
         self.valuesTh = self.parser.tresholdings
         self.pixelClass = self.parser.pixelClass
 
-        for order in self.allCombinations:
+        returnList = []
+
+        for order in copyAllCombinations:
             succes = 0
             for i in range(len(self.valuesTh)):
                 pixelClass = self.pixelClass[i]
@@ -102,12 +105,15 @@ class Binarization:
                         succes += 1
 
             percent = float(succes) / len(self.valuesTh)
-            self.combPercentage["".join(order)] = percent
 
-            if "".join(order) in self.combPercentage.keys():
-                self.combPercentage["".join(order)] = (self.combPercentage["".join(order)] + percent) / 2
-            else:
-                self.combPercentage["".join(order)] = percent
+            if percent >= limit:
+                returnList.append(order)
+
+                if "".join(order) in self.combPercentage.keys():
+                    self.combPercentage["".join(order)] = (self.combPercentage["".join(order)] + percent) / 2
+                else:
+                    self.combPercentage["".join(order)] = percent
+        return returnList
 
 class LocalSolver:
 
@@ -119,38 +125,79 @@ class LocalSolver:
         dir_list = os.listdir(inputPath)
 
         self.binarization.allCombinations = self.binarization.generateCombinationsList()
-        
+        copyAllCombinations = deepcopy(self.binarization.allCombinations)
+        counter = 0
 
-        idx = 0        
         for inFile in dir_list:
-            idx += 1
             print(inFile + "...")
             inputFilePath = inputPath + '/' + str(inFile)
-            self.binarization.findSolutionForOneFile(inputFilePath)
-
-            jsonObj = json.dumps(self.binarization.combPercentage, indent=4)
-            with open("localTrainResults.json", "w") as outfile:
-                outfile.write(jsonObj)
-            
-            if idx == 1:
+            returnList = self.binarization.findSolutionForOneFile(inputFilePath, copyAllCombinations, 0.8)
+            copyAllCombinations = deepcopy(returnList)
+            print(len(copyAllCombinations))
+            if counter == 10:
                 break
+            counter += 1
+
+        jsonObj = json.dumps(self.binarization.combPercentage, indent=4)
+        with open("localTrainResults.json", "w") as outfile:
+            outfile.write(jsonObj)
+
+        self.binarization.allCombinations = deepcopy(copyAllCombinations)
+        self.binarization.combPercentage.clear()
         
+    def localValidation(self):
+        inputPath = os.getcwd() + '/tests/local/validation'
+        dir_list = os.listdir(inputPath)
+        copyAllCombinations = deepcopy(self.binarization.allCombinations)
+
+        counter = 0
+        for inFile in dir_list:
+            print(inFile + "...")
+            
+            inputFilePath = inputPath + '/' + str(inFile)
+            returnList = self.binarization.findSolutionForOneFile(inputFilePath, copyAllCombinations, 0.85)
+            copyAllCombinations = deepcopy(returnList)
+            print(len(copyAllCombinations))
+            if counter == 10:
+                break
+            counter += 1
+        
+        jsonObj = json.dumps(self.binarization.combPercentage, indent=4)
+        with open("localValidationResults.json", "w") as outfile:
+            outfile.write(jsonObj)
+
+        self.binarization.allCombinations = deepcopy(copyAllCombinations)
+        self.binarization.combPercentage.clear()
+
+    def localTest(self):
+        inputPath = os.getcwd() + '/tests/local/test'
+        dir_list = os.listdir(inputPath)
+        copyAllCombinations = deepcopy(self.binarization.allCombinations)
+
+        counter = 0
+        for inFile in dir_list:
+            print(inFile + "...")
+            
+            inputFilePath = inputPath + '/' + str(inFile)
+            returnList = self.binarization.findSolutionForOneFile(inputFilePath, copyAllCombinations, 0.95)
+            copyAllCombinations = deepcopy(returnList)
+            print(len(copyAllCombinations))
+            if counter == 10:
+                break
+            counter += 1
+        
+        jsonObj = json.dumps(self.binarization.combPercentage, indent=4)
+        with open("localTestResults.json", "w") as outfile:
+            outfile.write(jsonObj)
+
+        self.binarization.allCombinations = deepcopy(copyAllCombinations)
 
 def main():
     solver = LocalSolver()
-    start_time = time.time()
     solver.localTrain()
-    print(time.time() - start_time)
-   
-#    solver.binarization.combPercentage
-
+    solver.localValidation()
+    solver.localTest()
+    print(solver.binarization.allCombinations)
 
 if __name__ == "__main__":
     main()
-
-
-# print(reader.plusList)
-#     # reader.readCSV("tests/local/test/[S-MS]z92-F1s.CSV")
-
-#     # print(len(reader.pixelClass))
-#     # print(len(reader.tresholdings))
