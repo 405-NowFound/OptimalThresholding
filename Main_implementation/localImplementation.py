@@ -126,20 +126,19 @@ class LocalSolver:
 
         self.binarization.allCombinations = self.binarization.generateCombinationsList()
         copyAllCombinations = deepcopy(self.binarization.allCombinations)
+        
         counter = 0
-
         for inFile in dir_list:
-            print(inFile + "...")
             inputFilePath = inputPath + '/' + str(inFile)
             returnList = self.binarization.findSolutionForOneFile(inputFilePath, copyAllCombinations, 0.8)
             copyAllCombinations = deepcopy(returnList)
-            print(len(copyAllCombinations))
-            if counter == 10:
+            if counter == 50:
                 break
-            counter += 1
+            else:
+                counter += 1
 
         jsonObj = json.dumps(self.binarization.combPercentage, indent=4)
-        with open("localTrainResults.json", "w") as outfile:
+        with open("localResults/localTrainResults.json", "w") as outfile:
             outfile.write(jsonObj)
 
         self.binarization.allCombinations = deepcopy(copyAllCombinations)
@@ -152,18 +151,16 @@ class LocalSolver:
 
         counter = 0
         for inFile in dir_list:
-            print(inFile + "...")
-            
             inputFilePath = inputPath + '/' + str(inFile)
-            returnList = self.binarization.findSolutionForOneFile(inputFilePath, copyAllCombinations, 0.85)
+            returnList = self.binarization.findSolutionForOneFile(inputFilePath, copyAllCombinations, 0.83)
             copyAllCombinations = deepcopy(returnList)
-            print(len(copyAllCombinations))
-            if counter == 10:
+            if counter == 50:
                 break
-            counter += 1
+            else:
+                counter += 1
         
         jsonObj = json.dumps(self.binarization.combPercentage, indent=4)
-        with open("localValidationResults.json", "w") as outfile:
+        with open("localResults/localValidationResults.json", "w") as outfile:
             outfile.write(jsonObj)
 
         self.binarization.allCombinations = deepcopy(copyAllCombinations)
@@ -176,28 +173,16 @@ class LocalSolver:
 
         counter = 0
         for inFile in dir_list:
-            print(inFile + "...")
-            
             inputFilePath = inputPath + '/' + str(inFile)
-            returnList = self.binarization.findSolutionForOneFile(inputFilePath, copyAllCombinations, 0.95)
+            returnList = self.binarization.findSolutionForOneFile(inputFilePath, copyAllCombinations, 0.85)
             copyAllCombinations = deepcopy(returnList)
-            print(len(copyAllCombinations))
-            if counter == 10:
+            if counter == 50:
                 break
-            counter += 1
+            else:
+                counter += 1
         
         jsonObj = json.dumps(self.binarization.combPercentage, indent=4)
-        with open("localTestResults.json", "w") as outfile:
+        with open("localResults/localTestResults.json", "w") as outfile:
             outfile.write(jsonObj)
 
         self.binarization.allCombinations = deepcopy(copyAllCombinations)
-
-def main():
-    solver = LocalSolver()
-    solver.localTrain()
-    solver.localValidation()
-    solver.localTest()
-    print(solver.binarization.allCombinations)
-
-if __name__ == "__main__":
-    main()

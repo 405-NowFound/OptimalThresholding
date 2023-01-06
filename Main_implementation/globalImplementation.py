@@ -124,34 +124,19 @@ class GlobalSolver:
         self.bestCombinationsTested = dict()
 
     def globalTrain(self):
-
         inputPath = os.getcwd() + '/tests/global/train'
         dir_list = os.listdir(inputPath)
 
         self.binarization.allCombinations = self.binarization.generateCombinationsList()
         print(len(self.binarization.allCombinations))
 
-        # # index = 500
-        # now = datetime.now()
-
-        # current_time = now.strftime("%H:%M:%S")
-        # print("Current Time =", current_time)
-
-        idx = 20
         for inFile in dir_list:
-            print(inFile + "...")
+            # print(inFile + "...")
             inputFilePath = inputPath + '/' + str(inFile)
             self.binarization.findSolutionForOneFile(inputFilePath)
-            # idx -= 1
-            # if idx == 0:
-            #     break
-
-        # current_time = now.strftime("%H:%M:%S")
-        # print("Current Time =", current_time)
-        # now = datetime.now()
 
         jsonObj = json.dumps(self.binarization.combFreq, indent=4)
-        with open("trainResults.json", "w") as outfile:
+        with open("globalResults/trainResults.json", "w") as outfile:
             outfile.write(jsonObj)
 
         maximumValue = max(self.binarization.combFreq.values())
@@ -160,7 +145,7 @@ class GlobalSolver:
                 self.trainFilteredResults[key] = value
 
         jsonObj = json.dumps(self.trainFilteredResults, indent=4)
-        with open("filteredTrainResult.json", "w") as outfile:
+        with open("globalResults/filteredTrainResult.json", "w") as outfile:
             outfile.write(jsonObj)
 
     def globalValidation(self):
@@ -168,7 +153,7 @@ class GlobalSolver:
         dir_list = os.listdir(inputPath)
 
         for inFile in dir_list:
-            print(inFile + "...")
+            # print(inFile + "...")
             inputFilePath = inputPath + '/' + str(inFile)
             self.binarization.parser.readCSV(inputFilePath)
             self.binarization.idealTh = self.binarization.parser.tresholdings[0]
@@ -183,7 +168,7 @@ class GlobalSolver:
                         self.validationResults["".join(operations)] = 1
 
         jsonObj = json.dumps(self.validationResults, indent=4)
-        with open("validationResults.json", "w") as outfile:
+        with open("globalResults/validationResults.json", "w") as outfile:
             outfile.write(jsonObj)
 
         maximumValue = max(self.validationResults.values())
@@ -192,7 +177,7 @@ class GlobalSolver:
                 self.validationFilteredResults[key] = value
 
         jsonObj = json.dumps(self.validationFilteredResults, indent=4)
-        with open("filteredValidationResults.json", "w") as outfile:
+        with open("globalResults/filteredValidationResults.json", "w") as outfile:
             outfile.write(jsonObj)
 
 
@@ -201,7 +186,7 @@ class GlobalSolver:
         dir_list = os.listdir(inputPath)
 
         for inFile in dir_list:
-            print(inFile + "...")
+            # print(inFile + "...")
             inputFilePath = inputPath + '/' + str(inFile)
             self.binarization.parser.readCSV(inputFilePath)
             self.binarization.idealTh = self.binarization.parser.tresholdings[0]
@@ -216,7 +201,7 @@ class GlobalSolver:
                         self.testResults["".join(operations)] = 1
 
         jsonObj = json.dumps(self.testResults, indent=4)
-        with open("testResults.json", "w") as outfile:
+        with open("globalResults/testResults.json", "w") as outfile:
             outfile.write(jsonObj)
 
         maximumValue = max(self.testResults.values())
@@ -225,7 +210,7 @@ class GlobalSolver:
                 self.bestCombinationsTested[key] = value
 
         jsonObj = json.dumps(self.bestCombinationsTested, indent=4)
-        with open("bestResults.json", "w") as outfile:
+        with open("globalResults/bestResults.json", "w") as outfile:
             outfile.write(jsonObj)
 
     def globalAll(self):
@@ -234,8 +219,12 @@ class GlobalSolver:
         self.globalTest()
 
 def main():
-    GS = GlobalSolver()
-    GS.globalAll()
+    # GS = GlobalSolver()
+    # # GS.globalAll()
+    # GS.globalTrain()
+    # GS.globalValidation()
+    # GS.globalTest()
+    pass
 
 if __name__ == "__main__":
     main()
