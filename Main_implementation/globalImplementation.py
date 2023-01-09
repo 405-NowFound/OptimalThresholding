@@ -128,7 +128,6 @@ class GlobalSolver:
         dir_list = os.listdir(inputPath)
 
         self.binarization.allCombinations = self.binarization.generateCombinationsList()
-        print(len(self.binarization.allCombinations))
 
         for inFile in dir_list:
             # print(inFile + "...")
